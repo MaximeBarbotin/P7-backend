@@ -5,6 +5,8 @@ const fs = require('fs');
 //creation du .POST (creation de sauce)//
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce);
+
+  // Faire des requêtes MySQL pour ajouter un post
   delete sauceObject._id;
   const sauce = new Sauce({
     ...sauceObject,

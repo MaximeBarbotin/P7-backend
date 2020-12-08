@@ -9,13 +9,7 @@ const saucesRoutes = require('./routes/sauces');
 const userRoutes = require('./routes/user');
 
 //connection a BDD mongo DB//
-mongoose.connect(process.env.db_conn,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
+//process.env.db_conn
 
 const app = express();
 
@@ -31,7 +25,7 @@ app.use(bodyParser.json());
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-app.use('/api/sauces', saucesRoutes);
-app.use('/api/auth', userRoutes);
+app.use('/api/posts', saucesRoutes);
+app.use('/api/users', userRoutes);
 
 module.exports = app;
