@@ -5,11 +5,8 @@ const mongoose = require('mongoose');
 const path = require ('path');
 require('dotenv').config();
 
-const saucesRoutes = require('./routes/sauces');
+const postRoutes = require('./routes/post');
 const userRoutes = require('./routes/user');
-
-//connection a BDD mongo DB//
-//process.env.db_conn
 
 const app = express();
 
@@ -25,7 +22,7 @@ app.use(bodyParser.json());
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-app.use('/api/posts', saucesRoutes);
+app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 
 module.exports = app;
