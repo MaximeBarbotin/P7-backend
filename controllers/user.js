@@ -6,10 +6,10 @@ const mysql = require('mysql2');
  
 // create the connection to database
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'groupomania'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
 
 
@@ -68,7 +68,7 @@ exports.login = (req, res, next) => {
                     res.status(200).json({
                         userId: user.id,
                         token: jwt.sign(
-                            { userId: user.id },
+                            { userId: user.id, admin: user.admin },
                             process.env.jwt_token,
                             { expiresIn: '24h' }
                         )
