@@ -16,13 +16,12 @@ const connection = mysql.createConnection({
 
 //creation du .POST (creation de post)//
 exports.createPost = (req, res, next) => {
-
   const token = req.headers.authorization.split(' ')[1];
   const decodedToken = jwt.verify(token, process.env.jwt_token);
   const userId = decodedToken.userId;
-
   const postObject = req.body;
   const filename = req.file ? req.file.filename : ''
+
   connection.query(
     'INSERT INTO post(title, description, image, date, user_id) VALUES(?, ?, ?, NOW(), ?)',
     [postObject.title, postObject.description, filename, userId],
@@ -30,11 +29,21 @@ exports.createPost = (req, res, next) => {
         if(err){
           res.status(500).json(err)
         }
-        connection.query('SELECT * FROM post WHERE id = LAST_INSERT_ID()', function(err, results) {
+        connection.query(`
+          SELECT post.id, title, description, image, first_name, last_name
+          FROM post  
+          INNER JOIN user ON user.id = post.user_id 
+          WHERE post.id = LAST_INSERT_ID()`,
+          function(err, results) {
+          
           if(err){
             res.status(500).json(err)
           }
-          res.status(201).json({status: 'OK', post: results[0]})
+
+          const data = results[0]
+          data['modifiable'] = true
+          data['likes'] = 0;
+          res.status(201).json({status: 'OK', post: data})
         })
         
     }
@@ -46,7 +55,6 @@ exports.createPost = (req, res, next) => {
     const token = req.headers.authorization.split(' ')[1];
     const decodedToken = jwt.verify(token, process.env.jwt_token);
     const userId = decodedToken.userId;
-
     const postObject = req.body;
     const filename = req.file ? req.file.filename : ''
     connection.query('SELECT * FROM post WHERE id = ?', [req.params.id], function(err, results){
@@ -59,7 +67,6 @@ exports.createPost = (req, res, next) => {
         }
       }
     });
-
     connection.query(
       'UPDATE post SET title=?, description = ?, image = ?, user_id = ? WHERE id = ?',
       [postObject.title, postObject.description, filename, userId, req.params.id],
@@ -67,14 +74,14 @@ exports.createPost = (req, res, next) => {
           if(err){
             res.status(500).json(err)
           }
-          res.status(200).json({status: 'OK'})
+        
+          res.status(200).json({status: 'OK', filename})
       }
     );
   }
 
   //creation du .DELETE (suppression donne)
   exports.deletePost = (req, res, next) => {
-
     connection.query(
       'SELECT * FROM `post` WHERE id = ?',
       [req.params.id],
@@ -85,7 +92,6 @@ exports.createPost = (req, res, next) => {
           if(results[0].image !== ''){
             fs.unlinkSync(`images/${results[0].image}`)
           }
-
           connection.query(
             'DELETE FROM post WHERE id = ?',
             [req.params.id],
@@ -102,9 +108,12 @@ exports.createPost = (req, res, next) => {
   //creation du .GET (recuperation donnees tout les produits) 
   exports.getAllPost = (req, res, next) => {
     connection.query(
-      `SELECT id, title, date, description, image, post.user_id, (SELECT count(*) FROM likes WHERE likes.post_id = id) as "likes" 
+      `SELECT post.id, title, date, description, image, post.user_id, user.first_name, user.last_name, 
+          (SELECT count(*) FROM likes WHERE likes.post_id = post.id) as "likes",
+          (SELECT count(*) FROM likes WHERE likes.post_id = post.id AND likes.user_id = user.id) as "liked"
       FROM post
       LEFT JOIN likes ON likes.post_id = post.id
+      INNER JOIN user ON user.id = post.user_id
       GROUP BY id 
       ORDER BY date DESC`,
       function(err, results, fields) {
@@ -127,7 +136,6 @@ exports.createPost = (req, res, next) => {
     const token = req.headers.authorization.split(' ')[1];
     const decodedToken = jwt.verify(token, process.env.jwt_token);
     const userId = decodedToken.userId;
-
     connection.query(
       'INSERT INTO likes(post_id, user_id) VALUES(?, ?)',
        [req.params.id, userId],
@@ -147,13 +155,7 @@ exports.createPost = (req, res, next) => {
             }
           } else {
             res.status(201).json({'status' : 'OK'})
-          }
-
-
-        
-
-
-        
+          }        
        }
     )
 
