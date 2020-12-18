@@ -37,7 +37,6 @@ exports.signup = (req, res, next) => {
             res.status(401).json({status: 'KO', description: "L'utilisateur existe déjà"})
             return;
         } 
-
         bcrypt.hash(req.body.password, 10)
         .then(hash => {
             connection.execute(
@@ -53,7 +52,6 @@ exports.signup = (req, res, next) => {
         .catch(error => res.status(500).json({ error }))
     }
     )
-    
 };
 
 //connection//
