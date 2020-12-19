@@ -21,7 +21,6 @@ exports.createPost = (req, res, next) => {
   const userId = decodedToken.userId;
   const postObject = req.body;
   const filename = req.file ? req.file.filename : ''
-
   connection.query(
     'INSERT INTO post(title, description, image, date, user_id) VALUES(?, ?, ?, NOW(), ?)',
     [postObject.title, postObject.description, filename, userId],
@@ -35,17 +34,14 @@ exports.createPost = (req, res, next) => {
           INNER JOIN user ON user.id = post.user_id 
           WHERE post.id = LAST_INSERT_ID()`,
           function(err, results) {
-          
           if(err){
             res.status(500).json(err)
           }
-
           const data = results[0]
           data['modifiable'] = true
           data['likes'] = 0;
           res.status(201).json({status: 'OK', post: data})
-        })
-        
+        })        
     }
   );
 }
